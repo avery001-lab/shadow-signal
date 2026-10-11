@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101225">
+<title>SHADOW SIGNAL — Mind Game</title>
+<style>
+:root{--bg:#101225;--panel:#191c35;--panel2:#222642;--ink:#f5f5ff;--muted:#a9afd0;--cyan:#61f4e8;--pink:#ff6b9d;--gold:#ffd166;--good:#79f2a6;--bad:#ff7385}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#24274b 0,#101225 58%);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;min-height:100vh}
+main{max-width:980px;margin:auto;padding:22px 16px 40px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.brand{font-size:12px;letter-spacing:.22em;color:var(--cyan);font-weight:800}.pill{border:1px solid #3b4167;border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px}
+h1{font-size:clamp(32px,7vw,60px);line-height:.98;letter-spacing:-.05em;margin:18px 0 10px}h1 span{color:var(--cyan)}.intro{color:var(--muted);max-width:650px;line-height:1.55;margin:0 0 20px}
+.layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(250px,.75fr);gap:15px}.panel{background:linear-gradient(160deg,#1c203d,#171a30);border:1px solid #343958;border-radius:20px;padding:17px;box-shadow:0 16px 40px #0002}.panel h2{font-size:17px;margin:0 0 12px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}.stat{background:#101329;border:1px solid #2e3455;border-radius:13px;padding:10px}.stat small{display:block;color:var(--muted);font-size:11px}.stat strong{font-size:22px}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.tile{min-height:76px;border:1px solid #3a4168;border-radius:13px;background:#242846;color:var(--ink);font-size:25px;font-weight:800;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;cursor:pointer;transition:.15s}.tile small{font-size:9px;letter-spacing:.08em;color:var(--muted);font-weight:700}.tile:hover:not(:disabled){transform:translateY(-2px);border-color:var(--cyan)}.tile:disabled{cursor:default;opacity:.92}.tile.player{background:#164a53;border-color:var(--cyan);box-shadow:inset 0 0 0 1px var(--cyan)}.tile.goal{border-color:var(--gold)}.tile.trap{background:#4a203b;border-color:var(--pink)}.tile.signal{background:#173d3b;border-color:#3cae9e}.tile.visited{background:#2a2e49}.tile.selected{outline:2px solid var(--cyan)}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.btn{border:0;border-radius:12px;padding:12px 15px;font-weight:800;cursor:pointer;background:var(--cyan);color:#11172b}.btn.secondary{background:#2b3152;color:var(--ink);border:1px solid #41496f}.btn:disabled{opacity:.45;cursor:not-allowed}.side{display:flex;flex-direction:column;gap:15px}.rule{display:flex;gap:10px;margin:11px 0;align-items:flex-start}.rule b{display:block;font-size:13px}.rule p{margin:3px 0 0;font-size:12px;color:var(--muted);line-height:1.45}.icon{width:30px;height:30px;display:grid;place-items:center;background:#272d50;border-radius:9px;flex-shrink:0}
+.notice{margin-top:12px;border-radius:12px;padding:11px 12px;background:#11152a;color:var(--muted);font-size:13px;line-height:1.45;min-height:44px}.notice.good{color:var(--good)}.notice.bad{color:var(--bad)}.input{width:100%;padding:12px;border-radius:10px;border:1px solid #3b4268;background:#101329;color:var(--ink);font:inherit;margin:7px 0 10px}.leader-row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #303654;font-size:13px}.leader-row:last-child{border:0}.leader-row span:last-child{font-weight:800;color:var(--gold)}.muted{color:var(--muted);font-size:12px;line-height:1.5}.tag{display:inline-block;color:#11172b;background:var(--gold);font-size:10px;font-weight:900;letter-spacing:.1em;border-radius:5px;padding:4px 6px;margin-bottom:8px}.hidden{display:none!important}footer{color:#7f86aa;font-size:11px;text-align:center;margin-top:18px;line-height:1.5}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.tile{min-height:68px}.panel{padding:14px}.side{display:grid;grid-template-columns:1fr}.stats strong{font-size:20px}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><div class="brand">◆ INDEPENDENT MINI-GAME LAB</div><div class="pill">BETA 01 · SOLO CHALLENGE</div></div>
+  <h1>SHADOW<br><span>SIGNAL.</span></h1>
+  <p class="intro">A tiny strategy arena where every move costs energy, every signal changes your score, and the obvious route may be a trap. Reach the exit with the highest score you can.</p>
+  <div class="layout">
+    <section class="panel">
+      <div class="tag">MISSION <span id="roundLabel">01</span> / 03</div>
+      <div class="stats">
+        <div class="stat"><small>SCORE</small><strong id="score">0</strong></div>
+        <div class="stat"><small>ENERGY</small><strong id="energy">8</strong></div>
+        <div class="stat"><small>SIGNALS</small><strong id="signals">0/3</strong></div>
+      </div>
+      <h2 id="missionTitle">The Quiet Grid</h2>
+      <p class="muted" id="missionText">Move from ◆ to EXIT. Collect signals, avoid traps, and conserve energy.</p>
+      <div id="board" class="board" aria-label="Game grid"></div>
+      <div class="controls">
+        <button class="btn" id="startBtn">Start challenge</button>
+        <button class="btn secondary" id="hintBtn">Use hint (-30 pts)</button>
+        <button class="btn secondary" id="resetBtn">Restart</button>
+      </div>
+      <div class="notice" id="notice" role="status">Press “Start challenge” to begin. You can move one square up, down, left, or right.</div>
+    </section>
+    <aside class="side">
+      <section class="panel">
+        <h2>How to win</h2>
+        <div class="rule"><div class="icon">◆</div><div><b>Plan your route</b><p>Tap a neighboring square. Diagonal moves are not allowed.</p></div></div>
+        <div class="rule"><div class="icon">✦</div><div><b>Collect 3 signals</b><p>Each signal is worth 100 points. Reach EXIT for a 250-point bonus.</p></div></div>
+        <div class="rule"><div class="icon">✕</div><div><b>Watch your energy</b><p>Every move costs 1 energy. Traps cost 2 extra energy and subtract 60 points.</p></div></div>
+        <div class="rule"><div class="icon">↻</div><div><b>Three missions</b><p>Your final score is saved to this device’s local leaderboard.</p></div></div>
+      </section>
+      <section class="panel">
+        <h2>Player card</h2>
+        <label class="muted" for="playerName">Your display name</label>
+        <input class="input" id="playerName" maxlength="18" placeholder="e.g. MindFox" value="">
+        <button class="btn secondary" id="saveName" style="width:100%">Save player name</button>
+        <div class="notice" id="playerNotice">Choose a nickname to appear on your local score list.</div>
+      </section>
+      <section class="panel">
+        <h2>Local leaderboard</h2>
+        <div id="leaderboard"><p class="muted">Finish a run to add your score.</p></div>
+        <p class="muted">Scores are stored in this browser only. A public shared leaderboard needs an online database.</p>
+        <button class="btn secondary" id="shareBtn" style="width:100%">Share game</button>
+      </section>
+    </aside>
+  </div>
+  <footer>SHADOW SIGNAL is an original mini-game prototype. Best played on mobile or desktop. Your score stays on this device unless a hosted version is connected to a shared leaderboard.</footer>
+</main>
+<script>
+const missions = [
+ {name:"The Quiet Grid", start:0, exit:15, signals:[5,10,14], traps:[2,8,13], blocked:[6], energy:8, hint:"Try moving down the left edge, then cross toward the glowing signals. Watch the trap near the bottom."},
+ {name:"False Shortcut", start:3, exit:12, signals:[2,7,9], traps:[4,10,14], blocked:[1], energy:10, hint:"The top route looks short, but a signal sits near the center. Circle around the blocked tile."},
+ {name:"Last Transmission", start:12, exit:3, signals:[5,6,9], traps:[1,8,14], blocked:[10], energy:9, hint:"Move upward first, then cut across the middle. One trap is guarding the most direct route."}
+];
+let missionIndex=0, pos=0, score=0, energy=8, collected=[], visited=[], running=false, done=false, hinted=false, runScore=0;
+const $=id=>document.getElementById(id);
+function current(){return missions[missionIndex]}
+function setNotice(msg,kind=""){const n=$("notice");n.textContent=msg;n.className="notice "+kind}
+function draw(){
+ const m=current(); const board=$("board"); board.innerHTML="";
+ for(let i=0;i<16;i++){
+  const b=document.createElement("button"); b.className="tile"; b.type="button";
+  let label=""; let symbol="·";
+  if(i===pos){symbol="◆";label="YOU";b.classList.add("player")}
+  else if(i===m.exit){symbol="⚑";label="EXIT";b.classList.add("goal")}
+  else if(m.signals.includes(i)){symbol=collected.includes(i)?"✓":"✦";label=collected.includes(i)?"GOT IT":"SIGNAL";b.classList.add(collected.includes(i)?"visited":"signal")}
+  else if(m.traps.includes(i)){symbol=visited.includes(i)?"×":"?";label=visited.includes(i)?"TRAP":"UNKNOWN";if(visited.includes(i))b.classList.add("trap")}
+  else if(m.blocked.includes(i)){symbol="▧";label="BLOCKED"}
+  else if(visited.includes(i)){symbol="·";label="VISITED";b.classList.add("visited")}
+  else {label="UNKNOWN"}
+  b.innerHTML=`<span>${symbol}</span><small>${label}</small>`;
+  b.disabled=!running||done||energy<=0||i===pos||m.blocked.includes(i)||!adjacent(pos,i);
+  b.addEventListener("click",()=>move(i)); board.appendChild(b);
+ }
+ $("score").textContent=score; $("energy").textContent=energy; $("signals").textContent=collected.length+"/3";
+ $("roundLabel").textContent=String(missionIndex+1).padStart(2,"0");
+ $("missionTitle").textContent=m.name;
+ $("missionText").textContent=done?(missionIndex===2?"All missions complete.":"Mission complete. Prepare for the next grid."):"Move from ◆ to EXIT. Collect signals, avoid traps, and conserve energy.";
+ $("startBtn").textContent=!running&&!done?"Start challenge":done?(missionIndex<2?"Next mission":"Play again"):"Challenge in progress";
+ $("hintBtn").disabled=!running||done||hinted;
+}
+function adjacent(a,b){return Math.abs(Math.floor(a/4)-Math.floor(b/4))+Math.abs(a%4-b%4)===1}
+function begin(next=false){
+ if(done&&missionIndex<2){missionIndex++;} else if(done&&missionIndex===2){missionIndex=0;score=0;runScore=0;}
+ const m=current();pos=m.start;energy=m.energy;collected=[];visited=[pos];running=true;done=false;hinted=false;
+ setNotice("Mission started. Choose your first move carefully.");draw();
+}
+function move(i){
+ if(!running||done||!adjacent(pos,i))return;
+ const m=current(); energy--;pos=i;visited.push(i);
+ if(m.traps.includes(i)){energy-=2;score=Math.max(0,score-60);setNotice("Trap triggered! −60 points and 2 extra energy. The grid remembers your move.","bad")}
+ else if(m.signals.includes(i)&&!collected.includes(i)){collected.push(i);score+=100;setNotice("Signal captured! +100 points. Keep planning your route.","good")}
+ else setNotice("Move recorded. Think two steps ahead.");
+ if(pos===m.exit){
+  if(collected.length<3){setNotice("You reached EXIT, but left signals behind. Mission failed—collect all 3 signals first.","bad");running=false;done=true;}
+  else {score+=250;setNotice("MISSION CLEARED! +250 exit bonus. Your route paid off.","good");running=false;done=true;}
+  if(missionIndex===2||collected.length<3||energy<0){finishRun()}
+ }else if(energy<=0){energy=0;running=false;done=true;setNotice("Out of energy! This mission ended. Your final run score has been recorded.","bad");finishRun()}
+ draw();
+}
+function finishRun(){
+ runScore=score;
+ const name=localStorage.getItem("ss-name")||$("playerName").value.trim()||"Player";
+ let list=[];try{list=JSON.parse(localStorage.getItem("ss-scores")||"[]")}catch(e){}
+ list.push({name,score:runScore,date:new Date().toLocaleDateString()});
+ list.sort((a,b)=>b.score-a.score);list=list.slice(0,10);localStorage.setItem("ss-scores",JSON.stringify(list));renderBoard();
+ if(missionIndex===2)setNotice("ALL 3 MISSIONS COMPLETE! Final score: "+runScore+". Check the local leaderboard.","good");
+}
+function renderBoard(){
+ let list=[];try{list=JSON.parse(localStorage.getItem("ss-scores")||"[]")}catch(e){}
+ $("leaderboard").innerHTML=list.length?list.map((x,i)=>`<div class="leader-row"><span>${i+1}. ${escapeHtml(x.name)} <small style="color:#858caf">· ${escapeHtml(x.date||"")}</small></span><span>${x.score}</span></div>`).join(""):'<p class="muted">Finish a run to add your score.</p>';
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("startBtn").addEventListener("click",()=>begin());
+$("resetBtn").addEventListener("click",()=>{missionIndex=0;score=0;running=false;done=false;pos=0;energy=current().energy;collected=[];visited=[];hinted=false;setNotice("Challenge reset. Start again whenever you're ready.");draw()});
+$("hintBtn").addEventListener("click",()=>{if(!running||hinted)return;score=Math.max(0,score-30);hinted=true;setNotice("HINT: "+current().hint+" (−30 points)");draw()});
+$("saveName").addEventListener("click",()=>{const name=$("playerName").value.trim().slice(0,18)||"Player";localStorage.setItem("ss-name",name);$("playerName").value=name;$("playerNotice").textContent="Saved as "+name+". Scores on this device will use this name.";});
+$("shareBtn").addEventListener("click",async()=>{const data={title:"SHADOW SIGNAL",text:"Try this strategy mind game: SHADOW SIGNAL. Play the HTML game file in your browser or use the hosted game link.",url:location.href};try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard){await navigator.clipboard.writeText(location.href);setNotice("Game URL copied. If you opened the local file, host it online first to get a shareable link.","good")}else setNotice("Once hosted, copy the game URL from your browser address bar.")}catch(e){}});
+const saved=localStorage.getItem("ss-name");if(saved)$("playerName").value=saved;renderBoard();energy=current().energy;draw();
+</script>
+</body>
+</html>
